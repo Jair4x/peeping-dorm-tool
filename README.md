@@ -15,6 +15,8 @@ On your PC, obviously.
 When what? When is the translation coming out? Lost all of it by accident when adapting [the mod](https://github.com/Jair4x/dorm-manager-patch) from MelonLoader to BepInEx for easier exportation.
 Few months after this repo I'll probably be finishing the translation.
 
+## Install
+Install the [`XLSX`](https://www.npmjs.com/package/xlsx) library. Done. Everything is from the base kit.
 ## Usage
 Simple, just use your js/ts interpreter of preferece (node, bun run, deno run, whatever) and run the command.
 Giving no args will default to these folders:
