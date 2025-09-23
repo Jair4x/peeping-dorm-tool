@@ -78,8 +78,8 @@ async function processAndCreateExcel(filePath) {
             { header: "ID",                 key: "id",          width: 30,      font: { size: 12, color: { argb: "FFC73A46" /* Red */ } },        wrap: false },
             { header: "Original Line",      key: "orig",        width: 70,      font: { size: 12, color: { argb: "FF2A2AD4" /* Blue */ } },       wrap: true  },
             { header: "Translated Line",    key: "trans",       width: 70,      font: { size: 12, color: { argb: "FF000000" /* Black */ } },      wrap: true  },
-            { header: "TL Notes",           key: "tlNote",      width: 20,      font: { size: 12, color: { argb: "FF693AC7" /* Purple */ } },     wrap: false },
-            { header: "Editor Notes",       key: "edNote",      width: 20,      font: { size: 12, color: { argb: "FFC73A46" /* Red */ } },        wrap: false },
+            { header: "TL Notes",           key: "tlNote",      width: 30,      font: { size: 12, color: { argb: "FF693AC7" /* Purple */ } },     wrap: false },
+            { header: "Editor Notes",       key: "edNote",      width: 30,      font: { size: 12, color: { argb: "FFC73A46" /* Red */ } },        wrap: false },
             { header: "Progress",           key: "progress",    width: 10,      font: { size: 12, color: { argb: "FF1C9128" /* Green */ } },      wrap: false },
             { header: "0/0",                key: "tlLines",     width: 15,      font: { size: 12, color: { argb: "FF1C9128" /* Green */ } },      wrap: false }
         ];
@@ -186,3 +186,4 @@ function main() {
 }
 
 main();
+
