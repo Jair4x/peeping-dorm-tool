@@ -16,7 +16,7 @@ When what? When is the translation coming out? Lost all of it by accident when a
 Few months after this repo I'll probably be finishing the translation.
 
 ## Install
-Install the [`XLSX`](https://www.npmjs.com/package/xlsx) library. Done. Everything is from the base kit.
+Install the [`ExcelJS`](https://www.npmjs.com/package/exceljs) library. Done. Everything else is from the base kit.
 ## Usage
 Simple, just use your js/ts interpreter of preferece (node, bun run, deno run, whatever) and run the command.
 Giving no args will default to these folders:
