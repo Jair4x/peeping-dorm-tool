@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 // Get cmd args
 const args = process.argv.slice(2);
@@ -11,65 +11,75 @@ let outputFolder = "./Rebuilt";
 
 function showHelp() {
     console.log(`
-        Usage: {node | bun run} rebuild.ts [-i input-folder] [-o output-folder]
+Usage: {node | bun run} rebuild.ts [-i input-folder] [-o output-folder]
 
-        Options:
-        -i, --input <folder>    Input folder (default: ./Extracted)
-        -o, --output <folder>   Output folder (default: ./Rebuilt)
-        -h, --help              Show this help
+Options:
+    -i, --input <folder>    Input folder (default: "./Extracted")
+    -o, --output <folder>   Output folder (default: "./Rebuilt")
+    -h, --help              Show this help
+
+Example:
+    bun run rebuild.ts -i "./XLSX files" -o "./Processed files"
     `);
 }
 
-// I hate that this is the solution I came out with
-if (args.length === 0) {
-    showHelp();
-    process.exit(0);
-} else {
-    for (let i = 0; i < args.length; i++) {
-        const arg = args[i];
-        if (arg === "-i" || arg === "--input") {
-            inputFolder = args[i + 1] || inputFolder;
-            i++;
-        } else if (arg === "-o" || arg === "--output") {
-            outputFolder = args[i + 1] || outputFolder;
-            i++;
-        } else if (arg === "-h" || arg === "--help") {
-            showHelp();
-            process.exit(0);
-        }
+// Process args
+for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "-i" || arg === "--input") {
+        inputFolder = args[i + 1] || inputFolder;
+        i++;
+    } else if (arg === "-o" || arg === "--output") {
+        outputFolder = args[i + 1] || outputFolder;
+        i++;
+    } else if (arg === "-h" || arg === "--help") {
+        showHelp();
+        process.exit(0);
     }
 }
 
 console.log(`Reading Excel files from: ${inputFolder}`);
 console.log(`Output JSON files to: ${outputFolder}`);
 
-function rebuildJsonFromExcel(filePath) {
+async function rebuildJsonFromExcel(filePath: string) {
     try {
         const fileName = path.basename(filePath, ".xlsx");
         console.log(`Processing ${fileName}...`);
 
-        // Read Excel file
-        const workbook = XLSX.readFile(filePath);
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.readFile(filePath);
 
-        const data = XLSX.utils.sheet_to_json(worksheet);
+        const worksheet = workbook.worksheets[0]; // first sheet
+        if (!worksheet) {
+            console.warn(`Warning: ${fileName} has no sheets`);
+            return false;
+        }
+
+        const data: any[] = [];
+
+        // Convert rows to JSON-like object
+        worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+            if (rowNumber === 1) return; // skip header
+            const rowValues = row.values as any[];
+            data.push({
+                ID: rowValues[1]?.toString().trim() || "",
+                translated_line: rowValues[3]?.toString().trim() || "",
+            });
+        });
 
         if (data.length === 0) {
             console.warn(`Warning: ${fileName} has no data`);
             return false;
         }
 
-        // Create the translation object
-        const translations = {};
+        // Build translations object
+        const translations: Record<string, string> = {};
         let translatedCount = 0;
 
         data.forEach((row) => {
-            const id = String(row.ID || "").trim();
-            const translatedLine = String(row.translated_line || "").trim();
-
+            const id = row.ID;
+            const translatedLine = row.translated_line;
             if (id && translatedLine) {
-                // Unescape newlines back to actual newlines for JSON
                 translations[id] = translatedLine.replace(/\\n/g, "\n");
                 translatedCount++;
             }
@@ -88,13 +98,11 @@ function rebuildJsonFromExcel(filePath) {
         }
 
         const outputFile = path.join(outputFolder, `${outputFileName}.json`);
-
-        // Write JSON file in the format we want
         fs.writeFileSync(outputFile, JSON.stringify(translations, null, 2), "utf8");
-        console.log(`✅ Created: ${outputFile} (${translatedCount} translations)`);
+        console.log(`Created: ${outputFile} (${translatedCount} translations)`);
 
         return true;
-    } catch (error) {
+    } catch (error: any) {
         console.error(`Error processing ${filePath}:`, error.message);
         return false;
     }
@@ -125,7 +133,7 @@ function main() {
             process.exit(1);
         }
 
-        console.log(`Found ${files.length} Excel files`);
+        console.log(`\nFound ${files.length} Excel files. \n`);
 
         let successCount = 0;
 
@@ -133,10 +141,9 @@ function main() {
             if (rebuildJsonFromExcel(file)) {
                 successCount++;
             }
-        })
+        });
 
-        console.log(`\n✅ Success! Created ${successCount} JSON files in: ${outputFolder}`);
-        console.log(`📁 Processed ${successCount}/${files.length} Excel files`);
+        console.log(`\nProcessed ${successCount}/${files.length} Excel files. \n`);
     } catch (error) {
         console.error("Error:", error.message);
         process.exit(1);
